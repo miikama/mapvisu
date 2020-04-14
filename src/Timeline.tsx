@@ -1,6 +1,7 @@
 import { Person } from "./Person";
 import SelectInput from "@material-ui/core/Select/SelectInput";
 import { Loader } from "./dataLoader";
+import { Subject } from "rxjs";
 
 
 export enum VisualisationState {
@@ -34,6 +35,8 @@ class TimeLine {
 
     yearChangedCallBack: ((year: number) => any) | null = null;
 
+    yearChangedEvent: Subject<number>;
+
     constructor() {
 
         const loader = new Loader();
@@ -42,6 +45,8 @@ class TimeLine {
         this.visualisationState = VisualisationState.Stopped;
 
         this.births = {};
+
+        this.yearChangedEvent = new Subject();
 
         // Add persons to boxes slots on their birth years
         this.persons.forEach( (person) => {
@@ -61,47 +66,33 @@ class TimeLine {
     }
 
     setPersons(persons: Person[]) {
-        console.log("Adding persons!!!!!!!!!!!!!!!!!!!!");
         this.persons = persons;
-    }
+    }        
 
-    setYearChangedCallback(callback: (year: number) => any ) {
-        console.log("adding callback!!!!!!!!!!!!!!!!!!!!");
-        this.yearChangedCallBack = callback;
-    }
+    async startVisualisation() {        
 
-    async startVisualisation() {
-        let allYears = this.getPresentYears();
-        this.currentYear = allYears && allYears[0];    
+        // set starting year
+        this.currentYear = this.getFirstYear() - 3;
         
-        this.visualisationState = VisualisationState.Running;
-        
+        // set state to running 
+        this.visualisationState = VisualisationState.Running;        
     
-        const currentYear = new Date().getFullYear();
-
-        // Just return if no yearchanged callback set
-        if(this.yearChangedCallBack == null)
-        {
-            console.warn("No yearChangedCallback set, not starting visualisation");
-            return;
-        }        
+        // at which year to stop at
+        const latestPossibleYear = new Date().getFullYear();
     
         // Loop indefinitely
         while ( this.visualisationState === VisualisationState.Running )  
         {
             this.currentYear++;
-            this.yearChangedCallBack(this.currentYear);
-            if(this.currentYear % 10 == 0)
-                console.log("Going an year: ", this.currentYear);
-    
-            if(this.currentYear >= currentYear)
+            this.yearChangedEvent.next(this.currentYear);   
+            if(this.currentYear >= latestPossibleYear)
             {
                 this.visualisationState = VisualisationState.Stopped;
                 
                 break;
             }   
                 
-            await sleep(1000);
+            await sleep(100);
         }
     }
 
@@ -111,14 +102,12 @@ class TimeLine {
 
     /** Main entry point for controlling the visualisation state */
     controVisualisation(command: VisualiseCommand) {
-        console.log("Controlling visualistaion, current state is: ", this.visualisationState);
+        console.log("Controlling visualisation, current state is: ", this.visualisationState);
         if(command === VisualiseCommand.Start && this.visualisationState === VisualisationState.Stopped)
             this.startVisualisation();
 
         if(command === VisualiseCommand.Stop)
             this.stopVisualisation();
-
-        console.log("Started visualistaion, current state is: ", this.visualisationState);
     }   
 
     getPersons(): Person[] {        
@@ -140,6 +129,17 @@ class TimeLine {
                 return true;
             return false;
         });
+    }
+
+    getLastYear(): number {
+        return new Date().getFullYear();
+    }
+
+    getFirstYear(): number {
+        let allYears = this.getPresentYears();  
+        if(allYears.length == 0)      
+            return this.getLastYear();
+        return allYears[0];
     }
 
     

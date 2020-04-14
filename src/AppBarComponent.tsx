@@ -2,7 +2,7 @@
 
 import React, { FunctionComponent } from 'react';
 import { Person } from './Person';
-import { VisualiseCommand } from './Timeline';
+import Timeline, { VisualiseCommand } from './Timeline';
 import TypoGraphy from "@material-ui/core/Typography"
 import { createMuiTheme, ThemeProvider, Theme, AppBar, Button, Icon } from '@material-ui/core';
 
@@ -23,15 +23,15 @@ export const MapHeader: FunctionComponent<HeaderProps> = ({ currentYear, theme, 
                     <TypoGraphy variant="h3">Year {currentYear}</TypoGraphy>                    
                     <Button 
                         color="inherit"                        
-                        onClick={ (e) => { controlVisualisation(VisualiseCommand.Start)}}
-                    >
-                        <Icon>send</Icon>
-                    </Button>                    
-                    <Button 
-                        color="inherit"                        
                         onClick={ (e) => { controlVisualisation(VisualiseCommand.Stop)}}
                     >
                         <Icon>stop</Icon>
+                    </Button>                    
+                    <Button 
+                        color="inherit"                        
+                        onClick={ (e) => { controlVisualisation(VisualiseCommand.Start)}}
+                    >
+                        <Icon>send</Icon>
                     </Button>                    
                 </div>
             </AppBar>

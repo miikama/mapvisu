@@ -1,5 +1,5 @@
 
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useState, useEffect } from 'react';
 import { Person } from './Person';
 import ReactMapGL, { InteractiveMapProps, Marker, Popup } from "react-map-gl";
 import { PersonMarker } from './PersonMarker';
@@ -15,6 +15,27 @@ interface MapProps {
 export const MapComponent: FunctionComponent<MapProps> = ({ defaults , selectedPerson, onPersonSelected }: MapProps) => {
 
     const [viewPort, setViewPort] = useState<InteractiveMapProps>(defaults)
+
+    TimeLine.yearChangedEvent.subscribe( (newYear) => {
+      // decrease zoom from 9 -> 3 as function of years
+      const maxZoom = 9;
+      const minZoom = 3;
+      // linearly interpolate between the zoom levels
+      const len = TimeLine.getLastYear()  - TimeLine.getFirstYear();
+      const dx = (newYear - TimeLine.getFirstYear()) / len;
+      const newZoom =  Math.round(minZoom * dx + maxZoom * (1-dx));
+
+      viewPort.zoom = newZoom;
+  })
+
+    // Close popups on escape
+    useEffect( () => {
+      const listener = (e: KeyboardEvent) => {
+        if(e.key === "Escape")
+        onPersonSelected(null);
+      }
+      window.addEventListener("keydown", listener);
+    }, []);
 
     return  (
         <ReactMapGL 

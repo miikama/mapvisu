@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import TypoGraphy from "@material-ui/core/Typography"
+import React, { useState } from 'react';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 
 import './App.css';
 
-import { Loader } from './dataLoader';
 import { Person } from './Person';
-import Timeline, { VisualisationState, VisualiseCommand } from './Timeline';
+import TimeLine, { VisualiseCommand } from './Timeline';
 import { MapComponent } from './MapComponent';
 import { InteractiveMapProps } from 'react-map-gl';
 import { MapHeader } from './AppBarComponent';
@@ -28,25 +26,15 @@ function App() {
     height: "93vh",
   }
 
-  const headerHeight: string = "7vh";
-
-  
+  const headerHeight: string = "7vh";  
 
   const  [selectedPerson, updateSelectedPerson] = useState<Person | null>(null);
 
   const  [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
 
-  Timeline.setYearChangedCallback(setCurrentYear);
-
-
-  // Close popups on escape
-  useEffect( () => {
-    const listener = (e: KeyboardEvent) => {
-      if(e.key === "Escape")
-        selectPerson(null);
-    }
-    window.addEventListener("keydown", listener);
-  }, []);
+  TimeLine.yearChangedEvent.subscribe((newYear) => {
+    setCurrentYear(newYear);    
+  });   
 
   // More logic to the person update
   function selectPerson(person: Person | null) {    
@@ -60,7 +48,7 @@ function App() {
   // start the visualisation
   function changeVisualState(command: VisualiseCommand) {
     console.log("Changing visual state with command: ", command);
-    Timeline.controVisualisation(command);      
+    TimeLine.controVisualisation(command);      
   }
 
   

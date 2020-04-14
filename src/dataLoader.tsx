@@ -57,7 +57,22 @@ class Loader {
             parents: [p2.data.id],
         })
 
-        this.persons = [p1, p2, p3];
+        let p4 = new Person({
+            id: this.getId(),
+            first_name: "Kimmo",
+            family_name: "Kultainen",
+            birth: {
+                type: LifeEventType.BIRTH,
+                date: new Date(2008, 1, 1),
+                place: {
+                    name: "Lahti",
+                    latitude: 61.0104535,
+                    longitude: 25.5846399,
+                }
+            },
+        })
+
+        this.persons = [p1, p2, p3, p4];
     }
 
     getId() {
