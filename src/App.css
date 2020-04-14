@@ -2,37 +2,45 @@
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.person-marker {
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;  
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+
+.ancestry1 {  
+  background-color: #d53e4f;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.ancestry2 {  
+  background-color: #f46d43;
 }
 
-.App-link {
-  color: #61dafb;
+.ancestry3 {  
+  background-color: #fdae61;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.ancestry4 {  
+  background-color: #fee08b;
+}
+
+.ancestry5 {  
+  background-color: #ffffbf;
+}
+
+.ancestry6 {  
+  background-color: #e6f598;
+}
+
+.ancestry7 {  
+  background-color: #abdda4;
+}
+
+.ancestry8 {  
+  background-color: #66c2a5;
+}
+
+.ancestry9 {  
+  background-color: #3288bd;
 }
