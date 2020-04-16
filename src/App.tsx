@@ -19,8 +19,8 @@ function App() {
   
 
   const defaults: InteractiveMapProps = {
-    latitude: 62.5,
-    longitude: 24,
+    latitude: TimeLine.getCurrentCenter().latitude,
+    longitude: TimeLine.getCurrentCenter().longitude,
     zoom: 7,    
     width: "100vw",
     height: "93vh",

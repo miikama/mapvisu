@@ -1,3 +1,4 @@
+import { Coordinate } from './Timeline';
 
 export interface Place {
     name: string;
@@ -58,6 +59,17 @@ class Person {
 
     birthYear() : number | undefined {
         return this.data.birth?.date.getFullYear() || undefined;
+    }
+
+    birthPlace(): Coordinate | undefined {
+
+        if(this.birthLat() && this.birthLong())
+            return {
+                latitude: this.birthLat(),
+                longitude: this.birthLong(),
+            }
+        return undefined;       
+
     }
 }
 

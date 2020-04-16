@@ -1,7 +1,11 @@
 import { Person } from "./Person";
-import SelectInput from "@material-ui/core/Select/SelectInput";
 import { Loader } from "./dataLoader";
 import { Subject } from "rxjs";
+
+export interface Coordinate {
+    latitude: number;
+    longitude: number;
+}
 
 
 export enum VisualisationState {
@@ -29,11 +33,14 @@ class TimeLine {
     // Timeline keeps track of the current year
     currentYear: number = 2020;
 
+    defaultCenter: Coordinate = {
+        latitude: 63,
+        longitude: 24,
+    }
+
     visualisationState: VisualisationState;
 
     persons: Person[] = [];
-
-    yearChangedCallBack: ((year: number) => any) | null = null;
 
     yearChangedEvent: Subject<number>;
 
@@ -100,6 +107,10 @@ class TimeLine {
         this.visualisationState = VisualisationState.Stopped;
     }
 
+    running() {
+        return this.visualisationState == VisualisationState.Running;
+    }
+
     /** Main entry point for controlling the visualisation state */
     controVisualisation(command: VisualiseCommand) {
         console.log("Controlling visualisation, current state is: ", this.visualisationState);
@@ -116,6 +127,15 @@ class TimeLine {
 
     getCurrentYear(): number {
         return this.currentYear;
+    }
+
+    getCurrentCenter(): Coordinate {
+
+        if(this.visualisationState == VisualisationState.Running)        
+            return this.calculateCenterCoordinates();      
+            
+
+        return this.defaultCenter;
     }
 
     /** Present years sorted */
@@ -140,6 +160,38 @@ class TimeLine {
         if(allYears.length == 0)      
             return this.getLastYear();
         return allYears[0];
+    }
+
+
+    calculateCenterCoordinates() : Coordinate {
+
+        const persons = this.personsBornBeforeYear(this.currentYear);
+
+        let lat = 0;
+        let long = 0;
+        let count = 0;
+
+        persons.forEach( (person) => {
+            if(person.data.birth?.place != null)
+            {
+               lat += person.data.birth.place.latitude; 
+               long += person.data.birth.place.longitude;
+               count++;
+            }
+        });
+
+        if( count > 0) {
+            return {
+                latitude: lat / count,
+                longitude: long / count,
+            };
+        }
+
+        const oldestPersonsBirthPlace = this.persons.length > 0 && this.births[this.getFirstYear()][0].birthPlace();        
+        if(oldestPersonsBirthPlace)                    
+            return oldestPersonsBirthPlace
+        
+        return this.defaultCenter;
     }
 
     
