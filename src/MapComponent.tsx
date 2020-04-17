@@ -20,6 +20,9 @@ const duration = 1000;
 const easing = d3.easeCubic;
 const interpol = new FlyToInterpolator();
 
+// Keep track whether we currently have a transition in progress
+let transitionStartinEnabled = true;
+
 export const MapComponent: FunctionComponent<MapProps> = ({ defaults , selectedPerson, onPersonSelected }: MapProps) => {
 
     defaults.transitionDuration = duration;
@@ -28,65 +31,54 @@ export const MapComponent: FunctionComponent<MapProps> = ({ defaults , selectedP
 
     const [viewPort, setViewPort] = useState<InteractiveMapProps>(defaults)
 
+    if(transitionStartinEnabled)
+      transitionStartinEnabled = false;
+
     TimeLine.yearChangedEvent.subscribe( (newYear) => {
 
-      if(TimeLine.running()) {
-        viewPort.transitionDuration = duration;
-        viewPort.transitionEasing = easing;
-        viewPort.transitionInterpolator = interpol;
-      }
+    
 
-      // Update map centre
-      const centre = TimeLine.getCurrentCenter();
+    if(TimeLine.running()) {
+      viewPort.transitionDuration = duration;
+      viewPort.transitionEasing = easing;
+      viewPort.transitionInterpolator = interpol;
+      viewPort.onTransitionEnd = () => { transitionStartinEnabled = true; }
+    }
 
-      // decrease zoom from 9 -> 3 as function of years
-      const maxZoom = 8;
-      const minZoom = 5;
-      // linearly interpolate between the zoom levels
-      const len = TimeLine.getLastYear()  - TimeLine.getFirstYear();
-      const dx = (newYear - TimeLine.getFirstYear()) / len;
-      const newZoom =  Math.round(minZoom * dx + maxZoom * (1-dx));
+    // Update map centre
+    const centre = TimeLine.getCurrentCenter();
 
-      // Prevent miniscule transformations from numerical precision to avoid unnecessary renders.
+    // decrease zoom from 9 -> 3 as function of years
+    const maxZoom = 8;
+    const minZoom = 5;
+    // linearly interpolate between the zoom levels
+    const len = TimeLine.getLastYear()  - TimeLine.getFirstYear();
+    const dx = (newYear - TimeLine.getFirstYear()) / len;
+    const newZoom =  Math.round(minZoom * dx + maxZoom * (1-dx));
 
-      if(viewPort.zoom != null) {
-        if(Math.abs(viewPort.zoom - newZoom) > 0.3) {          
-          console.log("Changing zoom");
-          viewPort.zoom = newZoom;
-        }
-      } else 
+    // Prevent miniscule transformations from numerical precision to avoid unnecessary renders.
+
+    if(viewPort.zoom != null) {
+      if(Math.abs(viewPort.zoom - newZoom) > 0.3) {          
+        console.log("Changing zoom");
         viewPort.zoom = newZoom;
-
-      if(viewPort.latitude == null || viewPort.longitude == null) 
-      {
-        viewPort.latitude = centre.latitude;
-        viewPort.longitude = centre.longitude;
-        return;
       }
+    } else 
+      viewPort.zoom = newZoom;
 
-      if( Math.abs(centre.latitude - viewPort.latitude) > 0.1 || Math.abs(centre.longitude - viewPort.longitude) > 0.1) {
-        console.log("Changing centre!, viewport lat: ", viewPort.latitude, " centre lat: ", centre.latitude);
-        viewPort.latitude = centre.latitude;
-        viewPort.longitude = centre.longitude;
-      }
+    if(viewPort.latitude == null || viewPort.longitude == null) 
+    {
+      viewPort.latitude = centre.latitude;
+      viewPort.longitude = centre.longitude;
+      return;
+    }
 
-      // // Prevent miniscule transformations from numerical precision to avoid unnecessary renders.
-      // const zoomChanged = viewPort.zoom == null ? true : Math.abs(viewPort.zoom - newZoom) > 0.1;
-      
-      // const centreChanged = viewPort.latitude == null || viewPort.longitude == null ? true : (
-      //   Math.abs(centre.latitude - viewPort.latitude) > 0.01 ||  Math.abs(centre.latitude - viewPort.longitude) > 0.01
-      // );
-      
-      // if(!zoomChanged && !centreChanged)
-      //   return;
-      
-      // setViewPort({
-      //   width: viewPort.width,
-      //   height: viewPort.height,
-      //   latitude: centre.latitude,
-      //   longitude: centre.longitude,
-      //   zoom: newZoom,
-      // })
+    if( Math.abs(centre.latitude - viewPort.latitude) > 0.1 || Math.abs(centre.longitude - viewPort.longitude) > 0.1) {
+      console.log("Changing centre!, viewport lat: ", viewPort.latitude, " centre lat: ", centre.latitude);
+      viewPort.latitude = centre.latitude;
+      viewPort.longitude = centre.longitude;
+    }
+    
   })
 
     // Close popups on escape
