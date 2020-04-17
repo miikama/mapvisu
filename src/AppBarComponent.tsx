@@ -1,10 +1,9 @@
 
 
 import React, { FunctionComponent } from 'react';
-import { Person } from './Person';
-import Timeline, { VisualiseCommand } from './Timeline';
+import { VisualiseCommand } from './Timeline';
 import TypoGraphy from "@material-ui/core/Typography"
-import { createMuiTheme, ThemeProvider, Theme, AppBar, Button, Icon } from '@material-ui/core';
+import { ThemeProvider, Theme, AppBar, Button, Icon } from '@material-ui/core';
 
 
 interface HeaderProps {

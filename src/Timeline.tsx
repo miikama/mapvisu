@@ -108,7 +108,7 @@ class TimeLine {
     }
 
     running() {
-        return this.visualisationState == VisualisationState.Running;
+        return this.visualisationState === VisualisationState.Running;
     }
 
     /** Main entry point for controlling the visualisation state */
@@ -131,7 +131,7 @@ class TimeLine {
 
     getCurrentCenter(): Coordinate {
 
-        if(this.visualisationState == VisualisationState.Running)        
+        if(this.visualisationState === VisualisationState.Running)        
             return this.calculateCenterCoordinates();      
             
 
@@ -157,7 +157,7 @@ class TimeLine {
 
     getFirstYear(): number {
         let allYears = this.getPresentYears();  
-        if(allYears.length == 0)      
+        if(allYears.length === 0)      
             return this.getLastYear();
         return allYears[0];
     }

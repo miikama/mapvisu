@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core';
+import { createMuiTheme } from '@material-ui/core';
 
 import './App.css';
 

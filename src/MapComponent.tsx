@@ -1,7 +1,7 @@
 
 import React, { FunctionComponent, useState, useEffect } from 'react';
 import { Person } from './Person';
-import ReactMapGL, { InteractiveMapProps, Marker, Popup, FlyToInterpolator } from "react-map-gl";
+import ReactMapGL, { InteractiveMapProps, Marker, Popup, FlyToInterpolator, TRANSITION_EVENTS } from "react-map-gl";
 import { PersonMarker } from './PersonMarker';
 import TimeLine from './Timeline';
 
@@ -14,7 +14,6 @@ interface MapProps {
     defaults: InteractiveMapProps;    
 }
 
-
 // constant defaults for the map transitions
 const duration = 1000;
 const easing = d3.easeCubic;
@@ -25,60 +24,57 @@ let transitionStartinEnabled = true;
 
 export const MapComponent: FunctionComponent<MapProps> = ({ defaults , selectedPerson, onPersonSelected }: MapProps) => {
 
-    defaults.transitionDuration = duration;
-    defaults.transitionEasing = easing;
-    defaults.transitionInterpolator = interpol;
+  defaults.transitionDuration = duration;
+  defaults.transitionEasing = easing;
+  defaults.transitionInterpolator = interpol;
 
-    const [viewPort, setViewPort] = useState<InteractiveMapProps>(defaults)
+  const [viewPort, setViewPort] = useState<InteractiveMapProps>(defaults)
 
-    if(transitionStartinEnabled)
-      transitionStartinEnabled = false;
+  TimeLine.yearChangedEvent.subscribe( (newYear) => {    
 
-    TimeLine.yearChangedEvent.subscribe( (newYear) => {
-
-    
-
-    if(TimeLine.running()) {
-      viewPort.transitionDuration = duration;
-      viewPort.transitionEasing = easing;
-      viewPort.transitionInterpolator = interpol;
-      viewPort.onTransitionEnd = () => { transitionStartinEnabled = true; }
-    }
-
-    // Update map centre
-    const centre = TimeLine.getCurrentCenter();
-
-    // decrease zoom from 9 -> 3 as function of years
-    const maxZoom = 8;
-    const minZoom = 5;
-    // linearly interpolate between the zoom levels
-    const len = TimeLine.getLastYear()  - TimeLine.getFirstYear();
-    const dx = (newYear - TimeLine.getFirstYear()) / len;
-    const newZoom =  Math.round(minZoom * dx + maxZoom * (1-dx));
-
-    // Prevent miniscule transformations from numerical precision to avoid unnecessary renders.
-
-    if(viewPort.zoom != null) {
-      if(Math.abs(viewPort.zoom - newZoom) > 0.3) {          
-        console.log("Changing zoom");
-        viewPort.zoom = newZoom;
+      if(TimeLine.running()) {
+        viewPort.transitionDuration = duration;
+        viewPort.transitionEasing = easing;
+        viewPort.transitionInterpolator = interpol;      
       }
-    } else 
-      viewPort.zoom = newZoom;
 
-    if(viewPort.latitude == null || viewPort.longitude == null) 
-    {
-      viewPort.latitude = centre.latitude;
-      viewPort.longitude = centre.longitude;
-      return;
-    }
+      
+      // We are transition only if the current is not running
+      if(!transitionStartinEnabled)
+        return;
 
-    if( Math.abs(centre.latitude - viewPort.latitude) > 0.1 || Math.abs(centre.longitude - viewPort.longitude) > 0.1) {
-      console.log("Changing centre!, viewport lat: ", viewPort.latitude, " centre lat: ", centre.latitude);
-      viewPort.latitude = centre.latitude;
-      viewPort.longitude = centre.longitude;
-    }
-    
+      // Update map centre
+      const centre = TimeLine.getCurrentCenter();
+
+      // decrease zoom from 9 -> 3 as function of years
+      const maxZoom = 8;
+      const minZoom = 5;
+      // linearly interpolate between the zoom levels
+      const len = TimeLine.getLastYear()  - TimeLine.getFirstYear();
+      const dx = (newYear - TimeLine.getFirstYear()) / len;
+      const newZoom =  Math.round(minZoom * dx + maxZoom * (1-dx));
+
+      // Prevent miniscule transformations from numerical precision to avoid unnecessary renders.
+
+      if(viewPort.zoom != null) {
+        if(Math.abs(viewPort.zoom - newZoom) > 0.3) {          
+          viewPort.zoom = newZoom;
+        }
+      } else 
+        viewPort.zoom = newZoom;
+
+      if(viewPort.latitude == null || viewPort.longitude == null) 
+      {
+        viewPort.latitude = centre.latitude;
+        viewPort.longitude = centre.longitude;
+        return;
+      }
+
+      if( Math.abs(centre.latitude - viewPort.latitude) > 0.1 || Math.abs(centre.longitude - viewPort.longitude) > 0.1) {
+        viewPort.latitude = centre.latitude;
+        viewPort.longitude = centre.longitude;
+      }
+
   })
 
     // Close popups on escape
@@ -102,6 +98,14 @@ export const MapComponent: FunctionComponent<MapProps> = ({ defaults , selectedP
             viewport.transitionInterpolator = interpol;
           }
           setViewPort(viewport);
+        }}
+        onTransitionEnd={ () => {          
+          console.log("Ended transition")
+          transitionStartinEnabled = true;
+        }}
+        onTransitionStart={ () => {
+          console.log("Started transition")
+          transitionStartinEnabled = false;
         }}
         > 
         {TimeLine.getPersons().map( (person) => {                         
