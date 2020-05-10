@@ -8,11 +8,11 @@ interface PersonProps {
 }
 
 export const PersonMarker: FunctionComponent<PersonProps> = ({ person, onPersonSelected }: PersonProps) => {
-    const levelString = "person-marker ancestry" + person.ancestryLevel();
-    return  (
-        <div 
+    const levelString = "person-marker ancestry" + (person.ancestryLevel() % 9 + 1);
+    return (
+        <div
             className={levelString}
-            onClick={ (e) => {
+            onClick={(e) => {
                 e.preventDefault();
                 onPersonSelected(person);
             }}
