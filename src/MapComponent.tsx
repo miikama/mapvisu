@@ -117,8 +117,8 @@ export const MapComponent: FunctionComponent<MapProps> = ({ defaults, selectedPe
       {TimeLine.getPersons().map((person) => {
         return <Marker
           key={person.data.id}
-          latitude={person.birthLat()}
-          longitude={person.birthLong()}>
+          latitude={person.birthLat() + 1e-5 * Math.sin(2 * Math.PI * person.drawing_seed) * 40}
+          longitude={person.birthLong() + 2 * 1e-5 * Math.cos(2 * Math.PI * person.drawing_seed) * 40}>
           <PersonMarker person={person} onPersonSelected={onPersonSelected} />
         </Marker>
       })}
@@ -126,6 +126,4 @@ export const MapComponent: FunctionComponent<MapProps> = ({ defaults, selectedPe
     </ReactMapGL>
   )
 }
-
-
 

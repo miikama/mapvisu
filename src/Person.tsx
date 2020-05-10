@@ -47,6 +47,11 @@ export interface PersonDataWithBirth extends PersonData {
 
 class Person {
 
+    /**
+     *  Add a small offset for each person for drawing on the map.
+     */
+    drawing_seed = Math.random();
+
     constructor(public data: PersonData) {
     }
 
