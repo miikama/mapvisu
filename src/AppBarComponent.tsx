@@ -4,6 +4,8 @@ import React, { FunctionComponent } from 'react';
 import { VisualiseCommand } from './Timeline';
 import TypoGraphy from "@material-ui/core/Typography"
 import { ThemeProvider, Theme, AppBar, Button, Icon } from '@material-ui/core';
+import SwapVertIcon from '@material-ui/icons/SwapVert';
+
 
 
 interface HeaderProps {
@@ -13,7 +15,7 @@ interface HeaderProps {
     controlVisualisation: (command: VisualiseCommand) => void
 }
 
-export const MapHeader: FunctionComponent<HeaderProps> = ({ currentYear, theme, height, controlVisualisation}: HeaderProps) => {    
+export const HeaderComponent: FunctionComponent<HeaderProps> = ({ currentYear, theme, height, controlVisualisation}: HeaderProps) => {    
 
     return  (
         <ThemeProvider theme={theme}>
@@ -31,6 +33,13 @@ export const MapHeader: FunctionComponent<HeaderProps> = ({ currentYear, theme, 
                         onClick={ (e) => { controlVisualisation(VisualiseCommand.Start)}}
                     >
                         <Icon>send</Icon>
+                    </Button>                    
+                    <Button 
+                        color="inherit"                        
+                        onClick={ (e) => { controlVisualisation(VisualiseCommand.ToggleGraphAndMap)}}
+                    >
+                        <SwapVertIcon />
+                        <TypoGraphy variant="body1">Graph/Map</TypoGraphy>                        
                     </Button>                    
                 </div>
             </AppBar>

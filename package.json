@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.9.10",
+    "@material-ui/icons": "^4.9.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -14,9 +15,11 @@
     "@types/react-dom": "^16.9.6",
     "@types/react-map-gl": "^5.2.2",
     "d3-ease": "^1.0.6",
+    "force-graph": "^1.28.1",
     "parse-gedcom": "^1.0.5",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-force-graph-2d": "^1.15.3",
     "react-map-gl": "^5.2.3",
     "react-scripts": "3.4.1",
     "rxjs": "^6.5.5",
@@ -42,5 +45,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "https": "^1.0.0"
   }
 }
