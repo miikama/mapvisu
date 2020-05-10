@@ -1,6 +1,8 @@
-import { Person } from "./Person";
+import { Person, LifeEventType } from './Person';
 import { Loader } from "./dataLoader";
 import { Subject } from "rxjs";
+import { PersonDataset } from "./PersonDataset";
+import LocationService from './LocationService';
 
 export interface Coordinate {
     latitude: number;
@@ -10,25 +12,26 @@ export interface Coordinate {
 
 export enum VisualisationState {
     Stopped = 0,
-    Running = 1,   
+    Running = 1,
 }
 
 export enum VisualiseCommand {
     Start,
     Stop,
+    ToggleGraphAndMap,
 }
 
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+}
 
 
 
 class TimeLine {
 
     // A mapping of available years by event type to persons
-    births: { [year: number]: Person[]};
+    births: { [year: number]: Person[] };
 
     // Timeline keeps track of the current year
     currentYear: number = 2020;
@@ -41,13 +44,27 @@ class TimeLine {
     visualisationState: VisualisationState;
 
     persons: Person[] = [];
+    personDataset: PersonDataset;
 
     yearChangedEvent: Subject<number>;
 
+    /**
+     *  Create the timeline
+     */
     constructor() {
 
         const loader = new Loader();
-        this.persons = loader.getData();  
+
+        // Parse the input GEDCOM file
+        this.persons = loader.getData();
+
+        // after parsing init the dataset
+        this.personDataset = new PersonDataset(this.persons);
+
+        // load up the locations
+        const foundLocations = LocationService.queryLocations(this.personDataset.uniqueLocationsOfType(LifeEventType.BIRTH));
+
+        this.personDataset.addLocations(foundLocations, LifeEventType.BIRTH);
 
         this.visualisationState = VisualisationState.Stopped;
 
@@ -56,12 +73,15 @@ class TimeLine {
         this.yearChangedEvent = new Subject();
 
         // Add persons to boxes slots on their birth years
-        this.persons.forEach( (person) => {
-            if(person.data.birth == null)
+        this.persons.forEach((person) => {
+            if (person.data.birth == null)
                 return;
-            
-            const birthYear = person.data.birth.date.getFullYear();
-            if(birthYear in this.births){
+
+            const birthYear = person.birthYear();
+            if (birthYear == null)
+                return;
+
+            if (birthYear in this.births) {
                 this.births[birthYear].push(person);
             }
             else {
@@ -72,33 +92,31 @@ class TimeLine {
 
     }
 
-    setPersons(persons: Person[]) {
-        this.persons = persons;
-    }        
+    data() {
+        return this.personDataset;
+    }
 
-    async startVisualisation() {        
+    async startVisualisation() {
 
         // set starting year
         this.currentYear = this.getFirstYear() - 3;
-        
+
         // set state to running 
-        this.visualisationState = VisualisationState.Running;        
-    
+        this.visualisationState = VisualisationState.Running;
+
         // at which year to stop at
         const latestPossibleYear = new Date().getFullYear();
-    
+
         // Loop indefinitely
-        while ( this.visualisationState === VisualisationState.Running )  
-        {
+        while (this.visualisationState === VisualisationState.Running) {
             this.currentYear++;
-            this.yearChangedEvent.next(this.currentYear);   
-            if(this.currentYear >= latestPossibleYear)
-            {
+            this.yearChangedEvent.next(this.currentYear);
+            if (this.currentYear >= latestPossibleYear) {
                 this.visualisationState = VisualisationState.Stopped;
-                
+
                 break;
-            }   
-                
+            }
+
             await sleep(100);
         }
     }
@@ -113,15 +131,14 @@ class TimeLine {
 
     /** Main entry point for controlling the visualisation state */
     controVisualisation(command: VisualiseCommand) {
-        console.log("Controlling visualisation, current state is: ", this.visualisationState);
-        if(command === VisualiseCommand.Start && this.visualisationState === VisualisationState.Stopped)
+        if (command === VisualiseCommand.Start && this.visualisationState === VisualisationState.Stopped)
             this.startVisualisation();
 
-        if(command === VisualiseCommand.Stop)
+        if (command === VisualiseCommand.Stop)
             this.stopVisualisation();
-    }   
+    }
 
-    getPersons(): Person[] {        
+    getPersons(): Person[] {
         return this.personsBornBeforeYear(this.currentYear);
     }
 
@@ -131,21 +148,21 @@ class TimeLine {
 
     getCurrentCenter(): Coordinate {
 
-        if(this.visualisationState === VisualisationState.Running)        
-            return this.calculateCenterCoordinates();      
-            
+        if (this.visualisationState === VisualisationState.Running)
+            return this.calculateCenterCoordinates();
+
 
         return this.defaultCenter;
     }
 
     /** Present years sorted */
-    getPresentYears() : number[] {
-        return Object.keys(this.births).map((year) => {return parseInt(year); } ).sort();
+    getPresentYears(): number[] {
+        return Object.keys(this.births).map((year) => { return parseInt(year); }).sort();
     }
 
     personsBornBeforeYear(year: number): Person[] {
-        return this.persons.filter( (person) => {
-            if(person.birthYear() && person.birthYear()! <= year)
+        return this.persons.filter((person) => {
+            if (person.birthYear() && person.birthYear()! <= year)
                 return true;
             return false;
         });
@@ -156,14 +173,14 @@ class TimeLine {
     }
 
     getFirstYear(): number {
-        let allYears = this.getPresentYears();  
-        if(allYears.length === 0)      
+        let allYears = this.getPresentYears();
+        if (allYears.length === 0)
             return this.getLastYear();
         return allYears[0];
     }
 
 
-    calculateCenterCoordinates() : Coordinate {
+    calculateCenterCoordinates(): Coordinate {
 
         const persons = this.personsBornBeforeYear(this.currentYear);
 
@@ -171,30 +188,29 @@ class TimeLine {
         let long = 0;
         let count = 0;
 
-        persons.forEach( (person) => {
-            if(person.data.birth?.place != null)
-            {
-               lat += person.data.birth.place.latitude; 
-               long += person.data.birth.place.longitude;
-               count++;
+        persons.forEach((person) => {
+            if (person.data.birth?.place != null) {
+                lat += person.data.birth.place.latitude;
+                long += person.data.birth.place.longitude;
+                count++;
             }
         });
 
-        if( count > 0) {
+        if (count > 0) {
             return {
                 latitude: lat / count,
                 longitude: long / count,
             };
         }
 
-        const oldestPersonsBirthPlace = this.persons.length > 0 && this.births[this.getFirstYear()][0].birthPlace();        
-        if(oldestPersonsBirthPlace)                    
+        const oldestPersonsBirthPlace = this.persons.length > 0 && this.births[this.getFirstYear()][0].birthPlace();
+        if (oldestPersonsBirthPlace)
             return oldestPersonsBirthPlace
-        
+
         return this.defaultCenter;
     }
 
-    
+
 
 
 
@@ -205,4 +221,4 @@ class TimeLine {
 
 
 
-export default new TimeLine()
+export default new TimeLine()
